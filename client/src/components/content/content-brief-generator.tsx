@@ -33,7 +33,10 @@ export function ContentBriefGenerator() {
     }
 
     try {
+      console.log('BriefGenerator: Starting content generation with brief:', brief);
       await generateContent(brief);
+      
+      console.log('BriefGenerator: Content generation completed, showing success message');
       
       // Show success message
       toast({
@@ -42,6 +45,7 @@ export function ContentBriefGenerator() {
       });
       
       // Navigate to editor to show the generated content
+      console.log('BriefGenerator: Navigating to editor');
       setLocation('/editor');
       
     } catch (error) {

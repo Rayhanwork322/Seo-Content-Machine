@@ -184,6 +184,7 @@ Start implementing these strategies today, and you'll see improvements in your $
 
   async writeFile(path: string, content: string): Promise<void> {
     await this.initialize();
+    console.log('PuterService: Writing file to', path);
     return window.puter.fs.write(path, content);
   }
 

@@ -59,16 +59,14 @@ export const useContentStore = create<ContentState>((set, get) => ({
         updatedAt: new Date(),
       };
 
-      // Save to Puter.fs
+      // Create content with ID immediately
       const contentId = `content_${Date.now()}`;
-      await puterService.writeFile(
-        `content/${contentId}.json`,
-        JSON.stringify(newContent)
-      );
-
-      // Update content list with new content
-      const { contentList } = get();
       const updatedContent = { ...newContent, id: contentId };
+      
+      console.log('ContentStore: Setting currentContent after generation:', updatedContent);
+      
+      // Update content list with new content immediately
+      const { contentList } = get();
       
       set({
         currentContent: updatedContent,
@@ -81,7 +79,19 @@ export const useContentStore = create<ContentState>((set, get) => ({
         },
       });
 
+      // Save to Puter.fs in the background (don't await)
+      try {
+        await puterService.writeFile(
+          `content/${contentId}.json`,
+          JSON.stringify(updatedContent)
+        );
+        console.log('ContentStore: Successfully saved content to Puter.fs');
+      } catch (saveError) {
+        console.warn('ContentStore: Failed to save to Puter.fs, but content is still in memory:', saveError);
+      }
+
     } catch (error) {
+      console.error('ContentStore: Content generation error:', error);
       set({
         error: error instanceof Error ? error.message : 'Content generation failed',
         isGenerating: false,
@@ -91,6 +101,7 @@ export const useContentStore = create<ContentState>((set, get) => ({
           status: '',
         },
       });
+      throw error; // Re-throw so the UI can handle it
     }
   },
 

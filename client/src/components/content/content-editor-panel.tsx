@@ -8,9 +8,17 @@ import { Save, FileText, Clock, Globe } from 'lucide-react';
 import { WordPressPublishModal } from '../wordpress/wordpress-publish-modal';
 
 export function ContentEditorPanel() {
-  const { currentContent, updateContent, saveContent } = useContentStore();
+  const { currentContent, updateContent, saveContent, contentList, isGenerating } = useContentStore();
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
+  
+  // If no current content but we have content in the list, use the most recent
+  useEffect(() => {
+    if (!currentContent && contentList.length > 0 && !isGenerating) {
+      console.log('No current content, using most recent from list:', contentList[0]);
+      useContentStore.getState().setCurrentContent(contentList[0]);
+    }
+  }, [currentContent, contentList, isGenerating]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -41,6 +49,11 @@ export function ContentEditorPanel() {
       setTimeout(() => setAutoSaveStatus(''), 3000);
     }
   };
+
+  // Debug: Log current content state
+  console.log('ContentEditorPanel: currentContent =', currentContent);
+  console.log('ContentEditorPanel: contentList.length =', contentList.length);
+  console.log('ContentEditorPanel: isGenerating =', isGenerating);
 
   if (!currentContent) {
     return (
