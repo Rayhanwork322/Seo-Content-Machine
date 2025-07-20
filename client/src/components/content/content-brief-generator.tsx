@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { useContentStore } from '@/lib/stores/content-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,9 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Wand2, Loader2 } from 'lucide-react';
 import { ContentBrief } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export function ContentBriefGenerator() {
   const { generateContent, isGenerating } = useContentStore();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [brief, setBrief] = useState<ContentBrief>({
     keyword: '',
     contentType: 'article',
@@ -20,13 +24,33 @@ export function ContentBriefGenerator() {
 
   const handleGenerateContent = async () => {
     if (!brief.keyword.trim()) {
+      toast({
+        title: "Keyword Required",
+        description: "Please enter a target keyword to generate content.",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
       await generateContent(brief);
+      
+      // Show success message
+      toast({
+        title: "Content Generated Successfully!",
+        description: "Your content is ready for editing and optimization.",
+      });
+      
+      // Navigate to editor to show the generated content
+      setLocation('/editor');
+      
     } catch (error) {
       console.error('Content generation failed:', error);
+      toast({
+        title: "Content Generation Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred.",
+        variant: "destructive",
+      });
     }
   };
 

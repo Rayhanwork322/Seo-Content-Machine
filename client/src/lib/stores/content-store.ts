@@ -66,8 +66,13 @@ export const useContentStore = create<ContentState>((set, get) => ({
         JSON.stringify(newContent)
       );
 
+      // Update content list with new content
+      const { contentList } = get();
+      const updatedContent = { ...newContent, id: contentId };
+      
       set({
-        currentContent: { ...newContent, id: contentId },
+        currentContent: updatedContent,
+        contentList: [updatedContent, ...contentList],
         isGenerating: false,
         generationProgress: {
           isGenerating: false,
