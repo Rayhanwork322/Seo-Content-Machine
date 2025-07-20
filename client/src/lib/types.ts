@@ -5,6 +5,8 @@ export interface ContentBrief {
   tone: string;
   audience: string;
   aiModel: string;
+  customPrompt?: string;
+  affiliateLinks?: string;
 }
 
 export interface GenerationProgress {

@@ -164,8 +164,18 @@ export class AIService {
   }
 
   private buildPrompt(brief: ContentBrief): string {
-    return `
-Create a comprehensive ${brief.contentType} about "${brief.keyword}".
+    // Content-type specific templates
+    const contentTypeTemplates = {
+      article: `Create a comprehensive article about "${brief.keyword}". Write an engaging piece with detailed insights and practical information.`,
+      guide: `Write a step-by-step how-to guide for "${brief.keyword}". Structure it with clear, actionable instructions and helpful tips.`,
+      review: `Write a detailed review for "${brief.keyword}". Include thorough analysis, pros and cons, comparisons, and recommendations.`,
+      listicle: `Create a well-structured listicle about "${brief.keyword}". Use numbered or bulleted points with detailed explanations for each item.`,
+      tutorial: `Write a comprehensive tutorial about "${brief.keyword}". Break it down into easy-to-follow sections with clear examples.`
+    };
+
+    let prompt = contentTypeTemplates[brief.contentType] || contentTypeTemplates.article;
+    
+    prompt += `
 
 Requirements:
 - Target length: ${brief.targetLength} words
@@ -184,8 +194,22 @@ Structure the content with:
 3. Practical examples and tips throughout
 4. Strong conclusion with clear next steps
 
-Focus on providing genuine value while naturally incorporating the target keyword.
-`;
+Focus on providing genuine value while naturally incorporating the target keyword.`;
+
+    // Add custom prompt if provided
+    if (brief.customPrompt?.trim()) {
+      prompt += `\n\nAdditional Instructions:\n${brief.customPrompt}`;
+    }
+
+    // Add affiliate link instructions if provided
+    if (brief.affiliateLinks?.trim()) {
+      const links = brief.affiliateLinks.split('\n').filter(link => link.trim());
+      if (links.length > 0) {
+        prompt += `\n\nIMPORTANT: Naturally integrate these relevant links into the content every 2-3 paragraphs where contextually appropriate:\n${links.map(link => `- ${link}`).join('\n')}`;
+      }
+    }
+
+    return prompt;
   }
 
   private extractTitle(content: string): string | null {

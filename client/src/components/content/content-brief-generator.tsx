@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Wand2, Loader2 } from 'lucide-react';
 import { ContentBrief } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -33,10 +34,8 @@ export function ContentBriefGenerator() {
     }
 
     try {
-      console.log('BriefGenerator: Starting content generation with brief:', brief);
+      // Generate content with new affiliate links and custom prompt features
       await generateContent(brief);
-      
-      console.log('BriefGenerator: Content generation completed, showing success message');
       
       // Show success message
       toast({
@@ -45,7 +44,6 @@ export function ContentBriefGenerator() {
       });
       
       // Navigate to editor to show the generated content
-      console.log('BriefGenerator: Navigating to editor');
       setLocation('/editor');
       
     } catch (error) {
@@ -119,6 +117,38 @@ export function ContentBriefGenerator() {
                 <SelectItem value="3000">3,000 words</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Custom Prompt */}
+          <div className="space-y-2">
+            <Label htmlFor="customPrompt">Custom Prompt</Label>
+            <Textarea
+              id="customPrompt"
+              placeholder="Add specific instructions for your content..."
+              value={brief.customPrompt || ''}
+              onChange={(e) => updateBrief('customPrompt', e.target.value)}
+              disabled={isGenerating}
+              className="min-h-[80px] resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Optional: Add specific requirements or tone
+            </p>
+          </div>
+
+          {/* Affiliate Links */}
+          <div className="space-y-2">
+            <Label htmlFor="affiliateLinks">Affiliate/Internal Links</Label>
+            <Textarea
+              id="affiliateLinks"
+              placeholder="https://example.com/product1&#10;https://affiliate.com/product2"
+              value={brief.affiliateLinks || ''}
+              onChange={(e) => updateBrief('affiliateLinks', e.target.value)}
+              disabled={isGenerating}
+              className="min-h-[80px] resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Links will be inserted every 2-3 paragraphs (one per line)
+            </p>
           </div>
 
           {/* AI Model */}

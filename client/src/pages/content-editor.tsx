@@ -2,6 +2,7 @@ import { ContentBriefGenerator } from '@/components/content/content-brief-genera
 import { ContentEditorPanel } from '@/components/content/content-editor-panel';
 import { SEOAnalysisPanel } from '@/components/content/seo-analysis-panel';
 import { GenerationProgress } from '@/components/content/generation-progress';
+import { ImageGenerator } from '@/components/content/image-generator';
 
 export default function ContentEditor() {
   return (

@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Save, FileText, Clock, Globe } from 'lucide-react';
+import { Save, FileText, Clock, Globe, Image } from 'lucide-react';
 import { WordPressPublishModal } from '../wordpress/wordpress-publish-modal';
+import { ImageGenerator } from './image-generator';
 
 export function ContentEditorPanel() {
   const { currentContent, updateContent, saveContent, contentList, isGenerating } = useContentStore();
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
   
   // If no current content but we have content in the list, use the most recent
@@ -50,10 +52,8 @@ export function ContentEditorPanel() {
     }
   };
 
-  // Debug: Log current content state
-  console.log('ContentEditorPanel: currentContent =', currentContent);
-  console.log('ContentEditorPanel: contentList.length =', contentList.length);
-  console.log('ContentEditorPanel: isGenerating =', isGenerating);
+  // Auto-select most recent content if none selected
+  // (Debug logs removed for production)
 
   if (!currentContent) {
     return (
@@ -94,6 +94,15 @@ export function ContentEditorPanel() {
                 </div>
               )}
               
+              {/* Image Generation Button */}
+              <Button 
+                onClick={() => setShowImageGenerator(!showImageGenerator)}
+                variant="outline"
+              >
+                <Image className="h-4 w-4 mr-2" />
+                {showImageGenerator ? 'Hide Images' : 'Generate Images'}
+              </Button>
+
               {/* WordPress Publish Button */}
               <Button onClick={() => setShowPublishModal(true)}>
                 <Globe className="h-4 w-4 mr-2" />
@@ -156,6 +165,22 @@ export function ContentEditorPanel() {
                 className="min-h-[600px] border-none resize-none text-base leading-relaxed focus-visible:ring-0"
               />
             </div>
+
+            {/* Image Generator Section */}
+            {showImageGenerator && (
+              <div className="mt-8 border-t border-border pt-6">
+                <ImageGenerator 
+                  content={currentContent.content}
+                  keyword={currentContent.keyword}
+                  onImageGenerated={(imageUrl) => {
+                    // Insert image at cursor position or at the end
+                    const imageMarkdown = `\n\n![Generated Image](${imageUrl})\n\n`;
+                    const updatedContent = currentContent.content + imageMarkdown;
+                    handleContentChange(updatedContent);
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

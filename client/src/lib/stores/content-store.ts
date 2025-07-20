@@ -63,7 +63,7 @@ export const useContentStore = create<ContentState>((set, get) => ({
       const contentId = `content_${Date.now()}`;
       const updatedContent = { ...newContent, id: contentId };
       
-      console.log('ContentStore: Setting currentContent after generation:', updatedContent);
+      // Content generated successfully and stored
       
       // Update content list with new content immediately
       const { contentList } = get();

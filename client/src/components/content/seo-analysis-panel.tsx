@@ -17,8 +17,11 @@ import {
   Eye,
   Hash,
   FileText,
-  Link
+  Link,
+  Image
 } from 'lucide-react';
+import { ImageGenerator } from './image-generator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function SEOAnalysisPanel() {
   const { currentContent, updateContent } = useContentStore();

@@ -188,6 +188,33 @@ Start implementing these strategies today, and you'll see improvements in your $
     return window.puter.fs.write(path, content);
   }
 
+  async generateImage(prompt: string, options: any = {}): Promise<string> {
+    await this.initialize();
+    console.log('PuterService: Generating image with prompt:', prompt);
+    
+    try {
+      const response = await window.puter.ai.txt2img(prompt, {
+        model: 'flux-schnell',
+        width: 1024,
+        height: 768,
+        steps: 4,
+        guidance_scale: 1,
+        ...options
+      });
+      
+      // The response should contain the image data or URL
+      if (response && (response.url || response.data || response.image)) {
+        return response.url || response.data || response.image;
+      }
+      
+      throw new Error('Invalid response format from image generation');
+      
+    } catch (error) {
+      console.error('PuterService: Image generation failed:', error);
+      throw error;
+    }
+  }
+
   async readFile(path: string): Promise<string> {
     await this.initialize();
     const file = await window.puter.fs.read(path);
