@@ -1,0 +1,72 @@
+Achieving “Unlimited” Puter.js Usage by Offloading Quotas to End Users
+Puter.js does not offer a hidden bypass for daily or hourly quotas on a single developer account. Instead, it uses a “User Pays” model—each Puter user authenticates and pays for their own consumption—so that individual end users bear any rate limits or usage restrictions rather than the developer’s single API key. By architecting your integration so that every end user signs in with their own Puter account, you effectively eliminate developer-level daily/hourly quotas:
+
+Strategy	How It Works	Outcome
+User-Pays Authentication	Embed Puter.js client-side and prompt each visitor to authenticate via their Puter account	Quotas apply per user, not per developer
+Per-User Token Rotation	Automate sign-up (or token refresh) in client code so each session uses a fresh Puter account token	New quota window per session
+Multi-Model Fallback	Dynamically switch between Claude, OpenRouter, o1-mini, etc., if a particular model’s quota is reached	Seamless continuity with alternative models
+1. Embed Puter.js with End-User Sign-In
+Include Puter.js in your frontend and require users to log in with their own Puter credentials. This shifts all AI usage costs and rate limits to the individual user’s Puter account.
+
+xml
+<script src="https://js.puter.com/v2/"></script>
+javascript
+// Prompt user to sign in; Puter will handle authentication popup
+puter.auth.signIn().then(user => {
+  // Now user.ai.chat() calls use the user’s own quota
+  return puter.ai.chat("Hello, world!", { model: "claude-sonnet-4" });
+}).then(response => {
+  console.log(response.message.content[0].text);
+});
+Because quotas reset per account, each authenticated visitor obtains their own daily/hourly allotment rather than sharing one developer key.
+
+2. Automate Token Rotation for Anonymous Sessions
+If you prefer anonymous access without explicit user sign-in, you can programmatically register temporary Puter accounts and rotate their tokens client-side. A community-contributed Python example demonstrates fetching a temp account token, using it for a chat call, detecting a usage-limited-chat error, then signing up again:
+
+python
+# Pseudocode outline from xtekky/gpt4free#2928[15]:
+def get_temp_token():
+    # call Puter signup endpoint
+    return new_token
+
+def call_puter(token, payload):
+    # call api.puter.com/drivers/call with Bearer {token}
+    # on delegate=="usage-limited-chat", return None
+
+token = get_temp_token()
+response = call_puter(token, request_body)
+if not response:
+    token = get_temp_token()  # rotate account
+    response = call_puter(token, request_body)
+Embedding similar logic in your frontend (e.g., via JavaScript’s fetch) yields a fresh quota window each time a token exhausts, effectively delivering near-unlimited usage.
+
+3. Fallback Across Multiple Models
+Puter.js supports many free, “unlimited” gateways:
+
+Claude Sonnet 4 / Opus 4
+
+OpenRouter models (Meta Llama, Google Gemma, etc.)
+
+OpenAI o1-mini
+
+By detecting quota exhaustion on one model and automatically retrying on another, you can maintain continuous service:
+
+javascript
+async function chatWithFallback(prompt) {
+  const models = ["claude-sonnet-4","openrouter:meta-llama/llama-3.1-8b-instruct","o1-mini"];
+  for (const model of models) {
+    try {
+      const res = await puter.ai.chat(prompt, { model });
+      return res;
+    } catch (err) {
+      if (err.error?.delegate === "usage-limited-chat") {
+        continue;  // try next model
+      }
+      throw err;
+    }
+  }
+  throw new Error("All models exhausted quota");
+}
+This multi-model strategy smooths over any per-model rate limits without manual intervention.
+
+In summary, there is no secret override of developer-level quotas in Puter.js. Instead, design your integration so that each end user authenticates (or you rotate anonymous tokens), shifting rate limits to individual accounts; and for extra resiliency, fail over to alternate AI models within Puter.js’s unlimited-access tutorials

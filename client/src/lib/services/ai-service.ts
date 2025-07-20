@@ -47,8 +47,7 @@ export class AIService {
         model: brief.aiModel || this.model,
         stream: false,
         max_tokens: this.maxTokens,
-        temperature: 0.7,
-        testMode: true // Set to true for testing without API credits
+        temperature: 0.7
       });
 
       // Handle different response formats from Puter.js
@@ -108,8 +107,7 @@ export class AIService {
         model: brief.aiModel || this.model,
         stream: true,
         max_tokens: this.maxTokens,
-        temperature: 0.7,
-        testMode: true // Set to true for testing without API credits
+        temperature: 0.7
       });
 
       let generatedContent = '';
