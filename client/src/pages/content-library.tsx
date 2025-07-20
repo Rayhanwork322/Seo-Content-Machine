@@ -1,249 +1,244 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useContentStore } from '@/lib/stores/content-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, FileText, Calendar, MoreHorizontal, Edit, Trash2, Share, Eye } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Search, Filter, Edit3, Eye, Trash2, Calendar, BarChart3, TrendingUp } from 'lucide-react';
+import { useLocation } from 'wouter';
 
-interface ContentItem {
-  id: string;
-  title: string;
-  excerpt: string;
-  status: 'draft' | 'published' | 'scheduled';
-  seoScore: number;
-  wordCount: number;
-  createdAt: string;
-  updatedAt: string;
-  category: string;
-  keyword: string;
-}
-
-const mockContent: ContentItem[] = [
-  {
-    id: '1',
-    title: 'Complete Guide to React Hooks',
-    excerpt: 'Learn everything about React Hooks including useState, useEffect, and custom hooks with practical examples...',
-    status: 'published',
-    seoScore: 92,
-    wordCount: 2500,
-    createdAt: '2024-01-15',
-    updatedAt: '2024-01-15',
-    category: 'Web Development',
-    keyword: 'react hooks'
-  },
-  {
-    id: '2',
-    title: 'JavaScript ES2024 Features',
-    excerpt: 'Discover the latest JavaScript features in ES2024 including new array methods, async improvements...',
-    status: 'draft',
-    seoScore: 89,
-    wordCount: 1800,
-    createdAt: '2024-01-12',
-    updatedAt: '2024-01-14',
-    category: 'JavaScript',
-    keyword: 'javascript es2024'
-  },
-  {
-    id: '3',
-    title: 'CSS Grid Layout Mastery',
-    excerpt: 'Master CSS Grid Layout with this comprehensive guide covering all properties and real-world examples...',
-    status: 'scheduled',
-    seoScore: 85,
-    wordCount: 3200,
-    createdAt: '2024-01-10',
-    updatedAt: '2024-01-11',
-    category: 'CSS',
-    keyword: 'css grid'
-  },
-  {
-    id: '4',
-    title: 'TypeScript Best Practices',
-    excerpt: 'Learn TypeScript best practices for writing maintainable and type-safe code in your projects...',
-    status: 'draft',
-    seoScore: 78,
-    wordCount: 2100,
-    createdAt: '2024-01-08',
-    updatedAt: '2024-01-08',
-    category: 'TypeScript',
-    keyword: 'typescript best practices'
-  }
-];
-
-export default function ContentLibrary() {
-  const [content, setContent] = useState<ContentItem[]>(mockContent);
+export function ContentLibrary() {
+  const { contentList, updateContent, deleteContent } = useContentStore();
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('updatedAt');
+  const [typeFilter, setTypeFilter] = useState('all');
 
-  const filteredContent = content
-    .filter(item => {
-      const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.keyword.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'updatedAt') return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      if (sortBy === 'seoScore') return b.seoScore - a.seoScore;
-      if (sortBy === 'wordCount') return b.wordCount - a.wordCount;
-      return a.title.localeCompare(b.title);
-    });
+  const filteredContent = contentList.filter(content => {
+    const matchesSearch = content.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (content.keyword || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || content.status === statusFilter;
+    const matchesType = typeFilter === 'all' || content.contentType === typeFilter;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'published': return 'bg-green-500';
-      case 'draft': return 'bg-yellow-500';
-      case 'scheduled': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'published': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'draft': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'pending': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 bg-green-50';
-    if (score >= 80) return 'text-blue-600 bg-blue-50';
-    if (score >= 70) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'published': return <TrendingUp className="h-3 w-3" />;
+      case 'draft': return <Edit3 className="h-3 w-3" />;
+      case 'pending': return <Calendar className="h-3 w-3" />;
+      default: return <BarChart3 className="h-3 w-3" />;
+    }
+  };
+
+  const handleStatusUpdate = (contentId: string, newStatus: string) => {
+    const content = contentList.find(c => c.id === contentId);
+    if (content) {
+      updateContent({ ...content, status: newStatus as 'draft' | 'published' });
+    }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Content Library</h1>
-        <p className="text-muted-foreground">Manage and organize all your content in one place</p>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search content..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <header className="bg-card border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Content Library</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage and organize your generated content
+            </p>
+          </div>
+          <Button onClick={() => setLocation('/generator')}>
+            <Edit3 className="h-4 w-4 mr-2" />
+            Create New Content
+          </Button>
         </div>
-        
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-          </SelectContent>
-        </Select>
+      </header>
 
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="updatedAt">Last Updated</SelectItem>
-            <SelectItem value="seoScore">SEO Score</SelectItem>
-            <SelectItem value="wordCount">Word Count</SelectItem>
-            <SelectItem value="title">Title</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <div className="flex-1 overflow-auto p-6">
+        {/* Filters and Search */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by title or keyword..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+            </SelectContent>
+          </Select>
 
-      {/* Content Grid */}
-      <div className="grid gap-4">
-        {filteredContent.map((item) => (
-          <Card key={item.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Badge variant="secondary" className="flex items-center space-x-1">
-                      <div className={`w-2 h-2 rounded-full ${getStatusColor(item.status)}`} />
-                      <span className="capitalize">{item.status}</span>
-                    </Badge>
-                    <Badge className={getScoreColor(item.seoScore)}>
-                      SEO: {item.seoScore}
-                    </Badge>
-                  </div>
-                  
-                  <CardTitle className="text-xl hover:text-primary cursor-pointer">
-                    {item.title}
-                  </CardTitle>
-                  <CardDescription className="mt-2">
-                    {item.excerpt}
-                  </CardDescription>
-                </div>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Eye className="h-4 w-4 mr-2" />
-                      Preview
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Share className="h-4 w-4 mr-2" />
-                      Publish
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="article">Article</SelectItem>
+              <SelectItem value="guide">Guide</SelectItem>
+              <SelectItem value="review">Review</SelectItem>
+              <SelectItem value="listicle">Listicle</SelectItem>
+              <SelectItem value="tutorial">Tutorial</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Content Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total Articles</CardTitle>
             </CardHeader>
-            
             <CardContent>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <div className="flex items-center space-x-4">
-                  <span className="flex items-center space-x-1">
-                    <FileText className="h-4 w-4" />
-                    <span>{item.wordCount} words</span>
-                  </span>
-                  
-                  <span className="flex items-center space-x-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>Updated {item.updatedAt}</span>
-                  </span>
-                  
-                  <Badge variant="outline">{item.category}</Badge>
-                </div>
-                
-                <div className="text-xs">
-                  Target: <span className="font-mono">{item.keyword}</span>
-                </div>
+              <div className="text-2xl font-bold">{contentList.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Published</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {contentList.filter(c => c.status === 'published').length}
               </div>
             </CardContent>
           </Card>
-        ))}
-        
-        {filteredContent.length === 0 && (
+          
           <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No content found</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                {searchTerm || statusFilter !== 'all' 
-                  ? 'Try adjusting your search or filters.'
-                  : 'Start creating your first piece of content.'}
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">
+                {contentList.filter(c => c.status === 'draft').length}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Avg SEO Score</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                {contentList.length > 0 
+                  ? Math.round(contentList.reduce((acc, c) => acc + (c.seoScore || 0), 0) / contentList.length)
+                  : 0}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Content Grid */}
+        {filteredContent.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <Edit3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No Content Found</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
+                  ? 'No content matches your current filters.'
+                  : 'Start creating content to build your library.'}
               </p>
-              <Button>
-                Create New Content
+              <Button onClick={() => setLocation('/generator')}>
+                Create Your First Article
               </Button>
             </CardContent>
           </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredContent.map((content) => (
+              <Card key={content.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg line-clamp-2">{content.title}</CardTitle>
+                      <CardDescription className="mt-1">
+                        Keyword: {content.keyword || 'N/A'}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 mt-3">
+                    <Badge variant="outline" className="capitalize">
+                      {content.contentType}
+                    </Badge>
+                    <Badge className={getStatusColor(content.status)}>
+                      {getStatusIcon(content.status)}
+                      {content.status}
+                    </Badge>
+                    {content.seoScore && (
+                      <Badge variant="secondary">
+                        SEO: {content.seoScore}
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                    {content.content.substring(0, 150)}...
+                  </p>
+                  
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+                    <span>{content.wordCount || 0} words</span>
+                    <span>{content.createdAt ? new Date(content.createdAt).toLocaleDateString() : 'N/A'}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setLocation('/editor')}
+                      className="flex-1"
+                    >
+                      <Edit3 className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    
+                    <Select 
+                      value={content.status || 'draft'} 
+                      onValueChange={(value) => handleStatusUpdate(content.id || '', value)}
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="published">Published</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     </div>

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect } from 'react';
 
-export default function Dashboard() {
+export function Dashboard() {
   const { user } = useAuthStore();
   const { contentList, loadContentList } = useContentStore();
 

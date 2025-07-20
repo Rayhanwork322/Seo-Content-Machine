@@ -4,7 +4,7 @@ import { SEOAnalysisPanel } from '@/components/content/seo-analysis-panel';
 import { GenerationProgress } from '@/components/content/generation-progress';
 import { ImageGenerator } from '@/components/content/image-generator';
 
-export default function ContentEditor() {
+export function ContentEditor() {
   return (
     <div className="flex-1 flex overflow-hidden">
       {/* Content Generation Panel */}

@@ -7,6 +7,7 @@ export interface ContentBrief {
   aiModel: string;
   customPrompt?: string;
   affiliateLinks?: string;
+  imageOption?: 'none' | 'ai' | 'unsplash' | 'pixabay' | 'pexels';
 }
 
 export interface GenerationProgress {

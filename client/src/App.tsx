@@ -4,12 +4,11 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/layout/app-layout";
-import Dashboard from "@/pages/dashboard";
-import ContentEditor from "@/pages/content-editor";
-import WordPressSites from "@/pages/wordpress-sites";
-import Analytics from "@/pages/analytics";
-import ContentLibrary from "@/pages/content-library";
-import NotFound from "@/pages/not-found";
+import { Dashboard } from "@/pages/dashboard";
+import { ContentEditor } from "@/pages/content-editor";
+import { WordPressSites } from "@/pages/wordpress-sites";
+import { Analytics } from "@/pages/analytics";
+import { ContentLibrary } from "@/pages/content-library";
 
 function Router() {
   return (
@@ -21,8 +20,8 @@ function Router() {
         <Route path="/wordpress" component={WordPressSites} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/library" component={ContentLibrary} />
-        {/* Fallback to 404 */}
-        <Route component={NotFound} />
+        {/* Fallback to dashboard */}
+        <Route component={Dashboard} />
       </Switch>
     </AppLayout>
   );

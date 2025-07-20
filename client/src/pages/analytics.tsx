@@ -1,197 +1,337 @@
+import { useState } from 'react';
+import { useContentStore } from '@/lib/stores/content-store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TrendingUp, TrendingDown, Eye, Users, Clock, Target } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  BarChart3, TrendingUp, Target, Calendar, 
+  FileText, Globe, Eye, MousePointer 
+} from 'lucide-react';
 
-const analyticsData = {
-  overview: {
-    totalContent: 42,
-    avgSeoScore: 87,
-    totalViews: 12543,
-    publishedThisMonth: 8
-  },
-  recentContent: [
-    {
-      id: '1',
-      title: 'Complete Guide to React Hooks',
-      seoScore: 92,
-      views: 1234,
-      publishDate: '2024-01-15',
-      status: 'published'
-    },
-    {
-      id: '2', 
-      title: 'JavaScript ES2024 Features',
-      seoScore: 89,
-      views: 856,
-      publishDate: '2024-01-12',
-      status: 'published'
-    },
-    {
-      id: '3',
-      title: 'CSS Grid Layout Mastery',
-      seoScore: 85,
-      views: 642,
-      publishDate: '2024-01-10',
-      status: 'published'
-    }
-  ],
-  seoTrends: [
-    { month: 'Oct', score: 82 },
-    { month: 'Nov', score: 85 },
-    { month: 'Dec', score: 87 },
-    { month: 'Jan', score: 89 }
-  ]
-};
+export function Analytics() {
+  const { contentList } = useContentStore();
+  const [timeRange, setTimeRange] = useState('30d');
 
-export default function Analytics() {
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 bg-green-50';
-    if (score >= 80) return 'text-blue-600 bg-blue-50';
-    if (score >= 70) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+  // Calculate analytics data
+  const totalContent = contentList.length;
+  const publishedContent = contentList.filter(c => c.status === 'published').length;
+  const avgSeoScore = totalContent > 0 
+    ? Math.round(contentList.reduce((acc, c) => acc + (c.seoScore || 0), 0) / totalContent)
+    : 0;
+  const avgWordCount = totalContent > 0
+    ? Math.round(contentList.reduce((acc, c) => acc + (c.wordCount || 0), 0) / totalContent)
+    : 0;
+
+  // Content type distribution
+  const contentTypeStats = contentList.reduce((acc, content) => {
+    acc[content.contentType] = (acc[content.contentType] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // SEO score distribution
+  const seoScoreRanges = {
+    excellent: contentList.filter(c => (c.seoScore || 0) >= 85).length,
+    good: contentList.filter(c => (c.seoScore || 0) >= 70 && (c.seoScore || 0) < 85).length,
+    needsWork: contentList.filter(c => (c.seoScore || 0) < 70).length,
   };
 
-  const getTrendIcon = (current: number, previous: number) => {
-    if (current > previous) {
-      return <TrendingUp className="h-4 w-4 text-green-600" />;
-    }
-    return <TrendingDown className="h-4 w-4 text-red-600" />;
-  };
+  // Recent activity
+  const recentContent = contentList
+    .sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 5);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
-          <p className="text-muted-foreground">Track your content performance and SEO metrics</p>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <header className="bg-card border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Analytics Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              Track your content performance and optimization metrics
+            </p>
+          </div>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 90 days</SelectItem>
+              <SelectItem value="1y">Last year</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        
-        <Select defaultValue="30days">
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7days">Last 7 days</SelectItem>
-            <SelectItem value="30days">Last 30 days</SelectItem>
-            <SelectItem value="90days">Last 90 days</SelectItem>
-            <SelectItem value="1year">Last year</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      </header>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Content</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsData.overview.totalContent}</div>
-            <p className="text-xs text-muted-foreground">
-              +{analyticsData.overview.publishedThisMonth} this month
-            </p>
-          </CardContent>
-        </Card>
+      <div className="flex-1 overflow-auto p-6">
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Content</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalContent}</div>
+              <p className="text-xs text-muted-foreground">
+                Articles created
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg SEO Score</CardTitle>
-            {getTrendIcon(analyticsData.overview.avgSeoScore, 85)}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsData.overview.avgSeoScore}</div>
-            <p className="text-xs text-muted-foreground">
-              +2 from last month
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Published</CardTitle>
+              <Globe className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{publishedContent}</div>
+              <p className="text-xs text-muted-foreground">
+                {totalContent > 0 ? Math.round((publishedContent / totalContent) * 100) : 0}% of total content
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsData.overview.totalViews.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Avg SEO Score</CardTitle>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{avgSeoScore}</div>
+              <Progress value={avgSeoScore} className="mt-2" />
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Published This Month</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsData.overview.publishedThisMonth}</div>
-            <p className="text-xs text-muted-foreground">
-              3 scheduled for next week
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Avg Word Count</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{avgWordCount.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                Words per article
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Recent Content Performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Content Performance</CardTitle>
-          <CardDescription>Your latest published articles and their metrics</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {analyticsData.recentContent.map((content) => (
-              <div key={content.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <h3 className="font-medium">{content.title}</h3>
-                  <p className="text-sm text-muted-foreground">Published on {content.publishDate}</p>
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <Badge className={getScoreColor(content.seoScore)}>
-                    SEO: {content.seoScore}
-                  </Badge>
-                  
-                  <div className="flex items-center space-x-1">
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{content.views}</span>
+        <Tabs defaultValue="content" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="content">Content Analysis</TabsTrigger>
+            <TabsTrigger value="seo">SEO Performance</TabsTrigger>
+            <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="content" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Content Type Distribution */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Content Type Distribution</CardTitle>
+                  <CardDescription>
+                    Breakdown of your content by type
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {Object.entries(contentTypeStats).map(([type, count]) => (
+                    <div key={type} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline" className="capitalize">
+                          {type}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-24 bg-muted rounded-full h-2">
+                          <div 
+                            className="bg-primary h-2 rounded-full" 
+                            style={{ width: `${(count / totalContent) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium w-8">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Publishing Status */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Publishing Status</CardTitle>
+                  <CardDescription>
+                    Current status of your content
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[
+                    { status: 'published', count: contentList.filter(c => c.status === 'published').length, color: 'bg-green-500' },
+                    { status: 'draft', count: contentList.filter(c => c.status === 'draft').length, color: 'bg-yellow-500' },
+                    { status: 'pending', count: contentList.filter(c => c.status === 'draft' && c.title?.includes('pending')).length, color: 'bg-blue-500' },
+                  ].map(({ status, count, color }) => (
+                    <div key={status} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-3 h-3 rounded-full ${color}`} />
+                        <span className="capitalize">{status}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-24 bg-muted rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${color}`}
+                            style={{ width: totalContent > 0 ? `${(count / totalContent) * 100}%` : '0%' }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium w-8">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="seo" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* SEO Score Distribution */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>SEO Score Distribution</CardTitle>
+                  <CardDescription>
+                    How your content performs on SEO metrics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span>Excellent (85+)</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-24 bg-muted rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full" 
+                          style={{ width: totalContent > 0 ? `${(seoScoreRanges.excellent / totalContent) * 100}%` : '0%' }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-8">{seoScoreRanges.excellent}</span>
+                    </div>
                   </div>
-                  
-                  <Badge variant="secondary" className="capitalize">
-                    {content.status}
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* SEO Trends Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>SEO Score Trends</CardTitle>
-          <CardDescription>Average SEO scores over the last 4 months</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end space-x-4 h-32">
-            {analyticsData.seoTrends.map((trend, index) => (
-              <div key={trend.month} className="flex flex-col items-center flex-1">
-                <div 
-                  className="bg-primary rounded-t w-full flex items-end justify-center text-white text-xs font-medium"
-                  style={{ height: `${(trend.score / 100) * 120}px` }}
-                >
-                  {trend.score}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <span>Good (70-84)</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-24 bg-muted rounded-full h-2">
+                        <div 
+                          className="bg-yellow-500 h-2 rounded-full" 
+                          style={{ width: totalContent > 0 ? `${(seoScoreRanges.good / totalContent) * 100}%` : '0%' }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-8">{seoScoreRanges.good}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <span>Needs Work (&lt;70)</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-24 bg-muted rounded-full h-2">
+                        <div 
+                          className="bg-red-500 h-2 rounded-full" 
+                          style={{ width: totalContent > 0 ? `${(seoScoreRanges.needsWork / totalContent) * 100}%` : '0%' }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-8">{seoScoreRanges.needsWork}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Top Performing Content */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top Performing Content</CardTitle>
+                  <CardDescription>
+                    Your highest SEO scoring articles
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {contentList
+                      .sort((a, b) => (b.seoScore || 0) - (a.seoScore || 0))
+                      .slice(0, 5)
+                      .map((content) => (
+                        <div key={content.id} className="flex items-center justify-between p-2 rounded-lg border">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm line-clamp-1">{content.title}</p>
+                            <p className="text-xs text-muted-foreground">{content.keyword}</p>
+                          </div>
+                          <Badge variant={(content.seoScore || 0) >= 85 ? "default" : "secondary"}>
+                            {content.seoScore || 0}
+                          </Badge>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="activity" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>
+                  Your latest content creation activity
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentContent.map((content) => (
+                    <div key={content.id} className="flex items-center space-x-4 p-4 rounded-lg border">
+                      <div className="flex-1">
+                        <p className="font-medium">{content.title}</p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {content.contentType}
+                          </Badge>
+                          <Badge className={`text-xs ${
+                            content.status === 'published' ? 'bg-green-100 text-green-800' :
+                            content.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {content.status}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {content.createdAt ? new Date(content.createdAt).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{content.wordCount || 0} words</p>
+                        <p className="text-xs text-muted-foreground">SEO: {content.seoScore || 0}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <span className="text-sm text-muted-foreground mt-2">{trend.month}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
+
