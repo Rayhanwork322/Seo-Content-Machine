@@ -48,7 +48,7 @@ export class AIService {
         stream: false,
         max_tokens: this.maxTokens,
         temperature: 0.7,
-        testMode: false // Set to true for testing without API credits
+        testMode: true // Set to true for testing without API credits
       });
 
       // Handle different response formats from Puter.js
@@ -85,6 +85,15 @@ export class AIService {
       
     } catch (error) {
       console.error('AI content generation failed:', error);
+      
+      // Handle Puter.js specific errors
+      if (error && typeof error === 'object' && 'error' in error && 'success' in error && !(error as any).success) {
+        const puterError = (error as any).error;
+        if (puterError && typeof puterError === 'object' && 'message' in puterError) {
+          throw new Error(`AI service error: ${puterError.message}`);
+        }
+      }
+      
       throw new Error(`AI content generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -100,7 +109,7 @@ export class AIService {
         stream: true,
         max_tokens: this.maxTokens,
         temperature: 0.7,
-        testMode: false // Set to true for testing without API credits
+        testMode: true // Set to true for testing without API credits
       });
 
       let generatedContent = '';

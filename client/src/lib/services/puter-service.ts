@@ -58,11 +58,14 @@ class PuterService {
         list: (path: string) => Promise.resolve([])
       },
       ai: {
-        chat: (prompt: string | any[], options: any) => {
+        chat: (prompt: string | any[], testMode: boolean, options: any) => {
           console.log('Mock Puter: Generating content for prompt');
           // Generate a more realistic mock content based on the prompt
           const mockContent = this.generateMockContent(prompt);
           return Promise.resolve({
+            message: {
+              content: mockContent
+            },
             text: mockContent,
             content: mockContent,
             usage: { total_tokens: 1500 }

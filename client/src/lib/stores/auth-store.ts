@@ -100,12 +100,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       } catch (puterError) {
         console.warn('Puter auth check failed, using fallback mode:', puterError);
-        // For now, assume not authenticated when Puter fails
-        set({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
+        // In development mode, allow access with mock user
+        if (import.meta.env.DEV || import.meta.env.NODE_ENV === 'development') {
+          set({
+            user: { id: 'dev-user', username: 'Developer', email: 'dev@example.com' },
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } else {
+          set({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
       }
     } catch (error) {
       set({
