@@ -76,18 +76,18 @@ export function Sidebar() {
         {navigation.map((item) => {
           const Icon = item.icon;
           return (
-            <Link key={item.name} href={item.href}>
-              <a
-                className={cn(
-                  'flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors',
-                  item.current
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                )}
-              >
-                <Icon className="h-5 w-5" />
-                <span>{item.name}</span>
-              </a>
+            <Link 
+              key={item.name} 
+              href={item.href}
+              className={cn(
+                'flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors',
+                item.current
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{item.name}</span>
             </Link>
           );
         })}

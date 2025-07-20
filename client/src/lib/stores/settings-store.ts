@@ -63,11 +63,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         preferences = savedPreferences || defaultPreferences;
       } catch (puterError) {
         console.warn('Failed to load preferences from Puter, using defaults:', puterError);
-        // Try to load from localStorage as fallback
-        const localPrefs = localStorage.getItem('seo_content_machine_preferences');
-        if (localPrefs) {
-          preferences = { ...defaultPreferences, ...JSON.parse(localPrefs) };
-        }
+        preferences = defaultPreferences;
       }
       
       set({

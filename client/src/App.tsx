@@ -6,6 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/layout/app-layout";
 import Dashboard from "@/pages/dashboard";
 import ContentEditor from "@/pages/content-editor";
+import WordPressSites from "@/pages/wordpress-sites";
+import Analytics from "@/pages/analytics";
+import ContentLibrary from "@/pages/content-library";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,10 +18,9 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/editor" component={ContentEditor} />
-        {/* Placeholder routes for future implementation */}
-        <Route path="/wordpress" component={() => <div className="p-6">WordPress Sites - Coming Soon</div>} />
-        <Route path="/analytics" component={() => <div className="p-6">Analytics - Coming Soon</div>} />
-        <Route path="/library" component={() => <div className="p-6">Content Library - Coming Soon</div>} />
+        <Route path="/wordpress" component={WordPressSites} />
+        <Route path="/analytics" component={Analytics} />
+        <Route path="/library" component={ContentLibrary} />
         {/* Fallback to 404 */}
         <Route component={NotFound} />
       </Switch>
