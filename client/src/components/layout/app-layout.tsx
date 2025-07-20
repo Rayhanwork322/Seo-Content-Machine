@@ -73,6 +73,20 @@ export function AppLayout({ children }: AppLayoutProps) {
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
         {children}
+        <footer className="border-t border-border bg-muted/50 px-4 py-2">
+          <div className="flex justify-center">
+            <p className="text-xs text-muted-foreground">
+              <a 
+                href="https://developer.puter.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors"
+              >
+                Powered by Puter
+              </a>
+            </p>
+          </div>
+        </footer>
       </main>
     </div>
   );

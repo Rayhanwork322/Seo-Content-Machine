@@ -11,22 +11,21 @@ class PuterService {
     if (this.initialized) return;
 
     try {
-      // Initialize Puter.js SDK
-      if (typeof window !== 'undefined' && !window.puter) {
-        // Dynamically load Puter.js SDK
-        const script = document.createElement('script');
-        script.src = 'https://js.puter.com/v2/';
-        script.async = true;
-        document.head.appendChild(script);
+      // Wait for Puter.js SDK to be available (loaded via script tag in HTML)
+      if (typeof window !== 'undefined') {
+        let attempts = 0;
+        while (!window.puter && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
         
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-          setTimeout(reject, 10000); // 10 second timeout
-        });
+        if (!window.puter) {
+          throw new Error('Puter.js SDK not available');
+        }
       }
 
       this.initialized = true;
+      console.log('Puter.js SDK initialized successfully');
     } catch (error) {
       console.warn('Puter.js failed to load, using fallback mode:', error);
       // Initialize with mock Puter object for development
@@ -213,7 +212,13 @@ Start implementing these strategies today, and you'll see improvements in your $
 
   async generateContent(prompt: string, options: any): Promise<any> {
     await this.initialize();
-    return window.puter.ai.chat(prompt, options);
+    console.log('Calling Puter.js AI with options:', options);
+    
+    // Handle testMode properly
+    const testMode = options.testMode || false;
+    delete options.testMode; // Remove testMode from options as it's a separate parameter
+    
+    return window.puter.ai.chat(prompt, testMode, options);
   }
 }
 

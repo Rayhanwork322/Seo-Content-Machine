@@ -2,23 +2,77 @@ import { ContentBrief, ContentData } from '../types';
 import { puterService } from './puter-service';
 
 export class AIService {
-  private model: string = 'claude-3-sonnet';
+  private model: string = 'claude-3-5-sonnet';
   private maxTokens: number = 4000;
+
+  // Available AI models from Puter.js
+  static readonly AVAILABLE_MODELS = [
+    'gpt-4o-mini',
+    'gpt-4o',
+    'o1',
+    'o1-mini',
+    'o1-pro',
+    'o3',
+    'o3-mini',
+    'o4-mini',
+    'gpt-4.1',
+    'gpt-4.1-mini',
+    'gpt-4.1-nano',
+    'gpt-4.5-preview',
+    'claude-sonnet-4',
+    'claude-opus-4',
+    'claude-3-7-sonnet',
+    'claude-3-5-sonnet',
+    'deepseek-chat',
+    'deepseek-reasoner',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+    'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
+    'meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo',
+    'mistral-large-latest',
+    'pixtral-large-latest',
+    'codestral-latest',
+    'google/gemma-2-27b-it',
+    'grok-beta'
+  ];
 
   async generateContent(brief: ContentBrief): Promise<ContentData> {
     const prompt = this.buildPrompt(brief);
     
     try {
+      console.log('Generating content with AI model:', brief.aiModel || this.model);
+      
       const response = await puterService.generateContent(prompt, {
         model: brief.aiModel || this.model,
-        stream: false, // Set to true for streaming implementation
-        maxTokens: this.maxTokens,
+        stream: false,
+        max_tokens: this.maxTokens,
+        temperature: 0.7,
+        testMode: false // Set to true for testing without API credits
       });
 
-      const generatedContent = response.text || response.content || '';
+      // Handle different response formats from Puter.js
+      let generatedContent = '';
+      if (typeof response === 'string') {
+        generatedContent = response;
+      } else if (response.message && response.message.content) {
+        generatedContent = response.message.content;
+      } else if (response.text) {
+        generatedContent = response.text;
+      } else if (response.content) {
+        generatedContent = response.content;
+      } else {
+        throw new Error('Unexpected response format from AI service');
+      }
+      
+      if (!generatedContent || generatedContent.trim().length === 0) {
+        throw new Error('AI service returned empty content');
+      }
       
       // Extract title from content or use keyword
       const title = this.extractTitle(generatedContent) || `Complete Guide to ${brief.keyword}`;
+      
+      console.log('Content generated successfully, word count:', this.countWords(generatedContent));
       
       return {
         title,
@@ -30,6 +84,7 @@ export class AIService {
       };
       
     } catch (error) {
+      console.error('AI content generation failed:', error);
       throw new Error(`AI content generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -38,26 +93,53 @@ export class AIService {
     const prompt = this.buildPrompt(brief);
     
     try {
+      console.log('Generating streaming content with AI model:', brief.aiModel || this.model);
+      
       const response = await puterService.generateContent(prompt, {
         model: brief.aiModel || this.model,
         stream: true,
-        maxTokens: this.maxTokens,
+        max_tokens: this.maxTokens,
+        temperature: 0.7,
+        testMode: false // Set to true for testing without API credits
       });
 
       let generatedContent = '';
       let progress = 0;
+      let chunkCount = 0;
       
-      for await (const chunk of response) {
-        if (chunk.text) {
-          generatedContent += chunk.text;
-          progress = Math.min(progress + 1, 95); // Cap at 95% until complete
-          onProgress(chunk.text, progress);
+      // Handle both async iterable and direct response
+      if (response[Symbol.asyncIterator]) {
+        for await (const chunk of response) {
+          const text = chunk.text || chunk.content || chunk.delta?.text || '';
+          if (text) {
+            generatedContent += text;
+            chunkCount++;
+            progress = Math.min(Math.floor((chunkCount / 50) * 95), 95); // Estimate progress
+            onProgress(text, progress);
+          }
+        }
+      } else {
+        // If streaming is not available, simulate it
+        const content = response.text || response.content || response.message?.content || '';
+        const words = content.split(' ');
+        for (let i = 0; i < words.length; i += 5) {
+          const chunk = words.slice(i, i + 5).join(' ') + ' ';
+          generatedContent += chunk;
+          progress = Math.min(Math.floor(((i + 5) / words.length) * 95), 95);
+          onProgress(chunk, progress);
+          await new Promise(resolve => setTimeout(resolve, 50)); // Simulate streaming delay
         }
       }
       
       onProgress('', 100); // Signal completion
       
+      if (!generatedContent || generatedContent.trim().length === 0) {
+        throw new Error('AI service returned empty content');
+      }
+      
       const title = this.extractTitle(generatedContent) || `Complete Guide to ${brief.keyword}`;
+      
+      console.log('Streaming content generated successfully, word count:', this.countWords(generatedContent));
       
       return {
         title,
@@ -69,6 +151,7 @@ export class AIService {
       };
       
     } catch (error) {
+      console.error('AI streaming content generation failed:', error);
       throw new Error(`AI content generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

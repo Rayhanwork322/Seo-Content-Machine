@@ -15,7 +15,7 @@ export function ContentBriefGenerator() {
     targetLength: 2000,
     tone: 'professional',
     audience: 'general',
-    aiModel: 'claude',
+    aiModel: 'claude-3-5-sonnet',
   });
 
   const handleGenerateContent = async () => {
@@ -104,10 +104,24 @@ export function ContentBriefGenerator() {
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="claude">Claude (Recommended)</SelectItem>
-                <SelectItem value="gpt-4">GPT-4</SelectItem>
-                <SelectItem value="gemini">Gemini</SelectItem>
+              <SelectContent className="max-h-60 overflow-y-auto">
+                <SelectItem value="claude-3-5-sonnet">Claude 3.5 Sonnet (Recommended)</SelectItem>
+                <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+                <SelectItem value="o1">O1</SelectItem>
+                <SelectItem value="o1-mini">O1 Mini</SelectItem>
+                <SelectItem value="claude-sonnet-4">Claude Sonnet 4</SelectItem>
+                <SelectItem value="claude-opus-4">Claude Opus 4</SelectItem>
+                <SelectItem value="claude-3-7-sonnet">Claude 3.7 Sonnet</SelectItem>
+                <SelectItem value="deepseek-chat">DeepSeek Chat</SelectItem>
+                <SelectItem value="deepseek-reasoner">DeepSeek Reasoner</SelectItem>
+                <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
+                <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
+                <SelectItem value="gpt-4.1">GPT-4.1</SelectItem>
+                <SelectItem value="gpt-4.1-nano">GPT-4.1 Nano</SelectItem>
+                <SelectItem value="mistral-large-latest">Mistral Large</SelectItem>
+                <SelectItem value="meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo">Llama 3.1 70B</SelectItem>
+                <SelectItem value="grok-beta">Grok Beta</SelectItem>
               </SelectContent>
             </Select>
           </div>
