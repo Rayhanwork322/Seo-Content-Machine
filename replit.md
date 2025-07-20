@@ -1,0 +1,121 @@
+# SEO Content Machine - Replit.md
+
+## Overview
+
+The SEO Content Machine is a modern React-based web application that automates SEO content creation and WordPress publishing. It uses AI-powered content generation, real-time SEO analysis, and serverless architecture to enable users to create and publish high-quality content efficiently.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development and optimized builds
+- **UI Framework**: ShadCN UI components built on Radix UI primitives
+- **Styling**: Tailwind CSS with custom design tokens and dark mode support
+- **State Management**: Zustand stores for auth, content, and settings
+- **Routing**: Wouter for lightweight client-side routing
+- **Data Fetching**: TanStack Query for server state management
+
+### Backend Architecture
+- **Runtime**: Node.js with Express.js server
+- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
+- **Serverless Integration**: Puter.js for authentication, file storage, and AI services
+- **API Layer**: RESTful endpoints with Express routes
+- **Authentication**: OAuth2 via Puter.auth with session management
+
+### Database Schema
+The application uses PostgreSQL with three main tables:
+- **users**: User profiles with Puter ID integration and preferences
+- **content**: Article storage with SEO metrics and publishing status
+- **wordpress_connections**: WordPress site credentials and connection settings
+
+## Key Components
+
+### Content Generation System
+- **AI Integration**: Multiple AI models (GPT-4, Claude, Gemini) via Puter.ai
+- **Content Brief Generator**: Keyword-driven content planning with SERP analysis
+- **Real-time Editor**: Rich text editing with auto-save functionality
+- **Progress Tracking**: Visual feedback during content generation
+
+### SEO Analysis Engine
+- **Real-time Analysis**: Continuous SEO scoring as content is edited
+- **Keyword Optimization**: Density tracking and placement recommendations
+- **Technical SEO**: Meta tags, heading structure, and readability analysis
+- **Recommendations**: Actionable suggestions for content improvement
+
+### WordPress Integration
+- **Multi-site Management**: Support for multiple WordPress installations
+- **REST API Integration**: Direct publishing via WordPress REST API
+- **Credential Storage**: Secure storage in Puter.kv key-value store
+- **Publishing Options**: Draft, immediate, or scheduled publishing
+
+### User Interface
+- **Responsive Design**: Mobile-first approach with adaptive layouts
+- **Accessibility**: WCAG 2.1 AA compliance with proper ARIA labels
+- **Theme Support**: Light/dark mode with CSS custom properties
+- **Component Library**: Consistent design system using ShadCN components
+
+## Data Flow
+
+1. **Authentication Flow**
+   - User signs in via Puter.auth OAuth2
+   - Session stored in browser with automatic refresh
+   - User preferences loaded from Puter.kv
+
+2. **Content Creation Flow**
+   - User inputs target keyword and content parameters
+   - System generates content brief using AI services
+   - Content generated via Puter.ai with progress tracking
+   - Real-time SEO analysis provides optimization suggestions
+   - Content saved to PostgreSQL via Drizzle ORM
+
+3. **Publishing Flow**
+   - User selects WordPress site from saved connections
+   - Content adapted for target site (categories, tags, formatting)
+   - Published via WordPress REST API
+   - Publishing status tracked in database
+
+## External Dependencies
+
+### Core Services
+- **Puter.js**: Serverless platform providing auth, storage, and AI services
+- **Neon Database**: Managed PostgreSQL hosting
+- **WordPress REST API**: Content publishing integration
+
+### Development Tools
+- **TypeScript**: Type safety and developer experience
+- **ESBuild**: Fast bundling for production builds
+- **Drizzle Kit**: Database migrations and schema management
+
+### UI Libraries
+- **Radix UI**: Accessible component primitives
+- **Tailwind CSS**: Utility-first styling framework
+- **Lucide React**: Consistent icon library
+
+## Deployment Strategy
+
+### Development Environment
+- **Local Development**: Vite dev server with hot module replacement
+- **Database**: Local PostgreSQL or Neon development database
+- **Environment Variables**: DATABASE_URL for database connection
+
+### Production Deployment
+- **Frontend**: Static build served via Vite/Express hybrid
+- **Backend**: Node.js server with Express routes
+- **Database**: Neon PostgreSQL with connection pooling
+- **Hosting**: Designed for deployment on platforms supporting Node.js
+
+### Build Process
+- **Frontend Build**: `vite build` creates optimized static assets
+- **Backend Build**: `esbuild` bundles server code for production
+- **Database Migrations**: `drizzle-kit push` applies schema changes
+
+### Environment Configuration
+- **Development**: `NODE_ENV=development` with tsx for TypeScript execution
+- **Production**: `NODE_ENV=production` with compiled JavaScript
+- **Database**: PostgreSQL connection via DATABASE_URL environment variable
+
+The application follows a serverless-first approach, leveraging Puter.js for most backend functionality while maintaining a traditional Express server for development and fallback endpoints.
